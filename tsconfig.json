@@ -1,0 +1,19 @@
+{
+    "compilerOptions": {
+        "allowImportingTsExtensions": true,
+        "noEmit": true,
+        "erasableSyntaxOnly": true,
+        "strict": true,
+        "module": "nodenext",
+        "verbatimModuleSyntax": true,
+        "types": [
+            "node"
+        ]
+    },
+    "include": [
+        "**/*"
+    ],
+    "exclude": [
+        "node_modules",
+    ]
+}
