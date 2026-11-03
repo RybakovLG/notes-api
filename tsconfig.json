@@ -5,6 +5,7 @@
         "erasableSyntaxOnly": true,
         "strict": true,
         "module": "nodenext",
+        "verbatimModuleSyntax": true,
         "types": [
             "node"
         ]

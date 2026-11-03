@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto"
 import fs from "node:fs/promises"
 import path from "node:path";
 
-type Note = { id: string, text: string }
+export type Note = { id: string, text: string }
 
 const PATH_NOTES = path.join(import.meta.dirname, 'notes.json');
 const NOTES_ENCODING = "utf-8"
@@ -22,7 +22,15 @@ export async function readNotes(): Promise<Note[]> {
 
 export async function addNote(text: Note["text"]) {
     const notes = await readNotes();
-    notes.push({ text, id: randomUUID() });
+    const newNote = { text, id: randomUUID() }
+    notes.push(newNote);
 
-    return await fs.writeFile(PATH_NOTES, JSON.stringify(notes), NOTES_ENCODING)
+    await fs.writeFile(PATH_NOTES, JSON.stringify(notes), NOTES_ENCODING)
+    return newNote
+}
+
+export function isValidNote(note: Pick<Note, 'text'>) {
+    return 'text' in note
+        && typeof note.text === 'string'
+        && note.text.trim().length > 0
 }
