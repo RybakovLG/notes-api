@@ -1,8 +1,23 @@
-import http, { type OutgoingHttpHeaders } from "node:http"
+import http from "node:http"
 import { addNote, isFileNotFound, isValidNote, type Note, readNotesAsStream } from "./notes.ts"
 import { pipeline } from "node:stream/promises"
 import { once } from "node:events"
-import type { ReadStream, ReadStreamEventMap } from "node:fs"
+
+class CustomError extends Error {
+  public custom: { code: number; msg: string, onSent?: () => void };
+  constructor(
+    code: number,
+    msg: string,
+    onSent?: () => void
+  ) {
+    super(msg);
+
+    this.name = "CustomError";
+    this.custom = {
+      code, msg, onSent
+    };
+  }
+}
 
 const CONTENT_TYPE_JSON = { "Content-Type": "application/json" }
 const METHODS = {
@@ -22,15 +37,24 @@ function isObject(value: unknown): value is Record<string, any> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
+let writeQueue: Promise<unknown> = Promise.resolve();
+
+async function safeTask(task: () => Promise<unknown>) {
+  const result = writeQueue.then(task);
+  writeQueue = result.catch(() => { });
+  return result
+}
+
+
 const server = http.createServer(async (req, res) => {
 
   function writeHeadJson(code: number) {
     res.writeHead(code, CONTENT_TYPE_JSON)
   }
 
-  function sendJson(code: number, data: unknown) {
+  function sendJson(code: number, data: unknown, onSent?: () => void) {
     writeHeadJson(code)
-    res.end(JSON.stringify(data));
+    res.end(JSON.stringify(data), onSent);
   }
 
   function sendServerError(e: unknown) {
@@ -45,30 +69,23 @@ const server = http.createServer(async (req, res) => {
 
   async function collectChunks(
     maxBodySize: number = MAX_BODY_SIZE
-  ): Promise<{ rawData: string, error: null } | { rawData: null, error: string }> {
+  ): Promise<string> {
 
     const buffers: Buffer[] = [];
     let bodySize = 0
-    let error = null
 
     for await (const chunk of req) {
       bodySize += (chunk as Buffer).length
 
       if (bodySize > maxBodySize) {
-        error = "Превышен размер запроса"
-        sendJson(413, setError(error))
-        req.destroy();
-
-        return { error, rawData: null }
+        throw new CustomError(413, "Превышен размер запроса", () => req.destroy())
       }
 
       buffers.push(chunk);
     }
 
-    return {
-      rawData: Buffer.concat(buffers).toString(),
-      error
-    }
+    return Buffer.concat(buffers).toString()
+
   }
 
   try {
@@ -84,9 +101,6 @@ const server = http.createServer(async (req, res) => {
       }
 
       if (req.method === METHODS.GET) {
-
-        // const data = await readNotes()
-        // sendJson(200, data)
 
         try {
           const stream = readNotesAsStream()
@@ -108,37 +122,40 @@ const server = http.createServer(async (req, res) => {
 
       if (req.method === METHODS.POST) {
 
-        const { rawData, error } = await collectChunks()
-        if (error) return
+        const rawData = await collectChunks()
+
+        let body = null
 
         try {
-          const body = JSON.parse(rawData as string);
-          const isValidBody = isObject(body) && isValidNote(body as Pick<Note, 'text'>)
-
-          if (!isValidBody) throw new Error
-
-          try {
-            const newNote = await addNote(body.text)
-            sendJson(201, newNote);
-          } catch (e) {
-            sendServerError(e)
-            return
-          }
+          body = JSON.parse(rawData);
         } catch {
-          sendJson(400, setError("Неверный формат заметки"));
-          return;
+          throw new CustomError(400, "Неверный формат заметки")
         }
+        const isValidBody = isObject(body) && isValidNote(body as Pick<Note, 'text'>)
+
+        if (!isValidBody) throw new CustomError(400, "Неверный формат заметки")
+
+
+        const newNote = await safeTask(() => addNote(body.text))
+        sendJson(201, newNote);
+
 
         return;
       }
 
+
       res.setHeader('Allow', "GET, POST")
-      sendJson(405, setError('Не разрешен метод запроса'))
-      return
+      throw new CustomError(405, 'Не разрешен метод запроса')
+
     }
 
   } catch (e) {
-    sendServerError(e)
+    if (e instanceof CustomError) {
+      sendJson(e.custom.code, setError(e.custom.msg), e.custom.onSent)
+    } else {
+      sendServerError(e)
+    }
+
     return;
   }
 

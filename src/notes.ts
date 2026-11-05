@@ -15,6 +15,7 @@ export function isFileNotFound(e: unknown) {
 export async function readNotes(): Promise<Note[]> {
     try {
         const notesJson = await fs.readFile(PATH_NOTES, NOTES_ENCODING)
+
         return JSON.parse(notesJson)
 
     } catch (e) {
