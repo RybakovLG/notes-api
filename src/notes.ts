@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto"
-import { createReadStream, ReadStream } from "node:fs";
+import { createReadStream } from "node:fs";
 import fs from "node:fs/promises"
 import path from "node:path";
 
@@ -37,7 +37,7 @@ export async function addNote(text: Note["text"]) {
     return newNote
 }
 
-export function isValidNote(note: Pick<Note, 'text'>) {
+export function isValidNote(note: Record<string, unknown>) {
     return 'text' in note
         && typeof note.text === 'string'
         && note.text.trim().length > 0

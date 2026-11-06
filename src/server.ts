@@ -45,7 +45,6 @@ async function safeTask(task: () => Promise<unknown>) {
   return result
 }
 
-
 const server = http.createServer(async (req, res) => {
 
   function writeHeadJson(code: number) {
@@ -78,14 +77,13 @@ const server = http.createServer(async (req, res) => {
       bodySize += (chunk as Buffer).length
 
       if (bodySize > maxBodySize) {
-        throw new CustomError(413, "Превышен размер запроса", () => req.destroy())
+        throw new CustomError(413, "Превышен размер запроса")
       }
 
       buffers.push(chunk);
     }
 
     return Buffer.concat(buffers).toString()
-
   }
 
   try {
@@ -131,22 +129,18 @@ const server = http.createServer(async (req, res) => {
         } catch {
           throw new CustomError(400, "Неверный формат заметки")
         }
-        const isValidBody = isObject(body) && isValidNote(body as Pick<Note, 'text'>)
+        const isValidBody = isObject(body) && isValidNote(body)
 
         if (!isValidBody) throw new CustomError(400, "Неверный формат заметки")
-
 
         const newNote = await safeTask(() => addNote(body.text))
         sendJson(201, newNote);
 
-
         return;
       }
 
-
       res.setHeader('Allow', "GET, POST")
       throw new CustomError(405, 'Не разрешен метод запроса')
-
     }
 
   } catch (e) {
