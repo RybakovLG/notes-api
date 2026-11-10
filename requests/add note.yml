@@ -1,0 +1,17 @@
+info:
+  name: add note
+  type: http
+
+http:
+  method: POST
+  url: "{{baseURL}}/notes"
+  body:
+    type: json
+    data: "{text: '123'}"
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto"
 import { createReadStream } from "node:fs";
 import fs from "node:fs/promises"
 import path from "node:path";
+import { isObject } from "./utils.ts";
 
 export type Note = { id: string, text: string }
 
@@ -38,7 +39,8 @@ export async function addNote(text: Note["text"]) {
 }
 
 export function isValidNote(note: Record<string, unknown>) {
-    return 'text' in note
+    return isObject(note)
+        && 'text' in note
         && typeof note.text === 'string'
         && note.text.trim().length > 0
 }
