@@ -1,6 +1,7 @@
 import type { AppErrorCode } from "./errorCodes.ts";
 
 export type ErrorDetails = {
+    in: 'query' | 'params' | 'body'
     field: string,
     message: string,
 }[]

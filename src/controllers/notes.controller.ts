@@ -2,16 +2,26 @@ import { noteRepo } from "../repositories/notes.repository.ts"
 import { AppError } from "../errors/appError.ts"
 import { created, ok } from "../http/response.ts"
 import type { Controller } from "../http/controller.ts"
-import type { CreateNote } from "../models/notes.models.ts"
+import type { noteSchemaObj } from "../models/notes.models.ts"
 
-const createNote: Controller<CreateNote> = async ({ body }, res) => {
+const createNote: Controller<typeof noteSchemaObj.create> = async ({ body }, res) => {
     const newNote = await noteRepo.write(body)
     created(res, newNote)
 }
 
-const getNotes: Controller = async (_, res) => {
+const getAllNotes: Controller = async (_, res) => {
     const notes = await noteRepo.read()
     ok(res, notes)
+}
+
+const getNotesById: Controller<typeof noteSchemaObj.getById> = async (req, res) => {
+    const foundNote = await noteRepo.findById(req.params.id)
+
+    if (!foundNote) {
+        throw new AppError('ENTITY_NOT_FOUND')
+    }
+
+    ok(res, foundNote)
 }
 
 const notesNotAllowed: Controller = (_, res) => {
@@ -21,6 +31,7 @@ const notesNotAllowed: Controller = (_, res) => {
 
 export const notesController = {
     create: createNote,
-    get: getNotes,
+    getAll: getAllNotes,
+    getById: getNotesById,
     notAllowed: notesNotAllowed
 }

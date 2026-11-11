@@ -1,9 +1,9 @@
 import { randomUUID } from "node:crypto"
 import fs from "node:fs/promises"
 import path from "node:path";
-import type { CreateNote, Note } from "../models/notes.models.ts";
+import type { Note, NoteBodyCreate } from "../models/notes.models.ts";
 
-const writeNote = async (note: CreateNote) => safeTask(() => addNote(note.text))
+const writeNote = async (note: NoteBodyCreate) => safeTask(() => addNote(note.text))
 
 let writeQueue: Promise<unknown> = Promise.resolve();
 
@@ -16,7 +16,7 @@ async function safeTask<T>(task: () => Promise<T>): Promise<T> {
 const PATH_NOTES = path.join(import.meta.dirname, '../notes.json');
 const NOTES_ENCODING = "utf-8"
 
-async function addNote(text: CreateNote["text"]) {
+async function addNote(text: NoteBodyCreate["text"]) {
     const notes = await readNotes();
     const newNote: Note = { text, id: randomUUID() }
     notes.push(newNote);
@@ -40,9 +40,17 @@ function isFileNotFound(e: unknown) {
     return e instanceof Error && 'code' in e && e.code === 'ENOENT'
 }
 
+async function findNoteById(id: Note['id']) {
+    const notes = await noteRepo.read()
+    const fundedNote = notes.find(note => note.id === id)
+
+    return fundedNote
+}
+
 export const noteRepo = {
     write: writeNote,
-    read: readNotes
+    read: readNotes,
+    findById: findNoteById
 }
 
 

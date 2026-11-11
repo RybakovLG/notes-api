@@ -1,20 +1,27 @@
 import { Router } from "express";
 import { validate } from "../middlewares/validation/validate.ts";
 import { notesController } from "../controllers/notes.controller.ts";
-import { createNoteSchema } from "../models/notes.models.ts";
+import { noteSchemaObj } from "../models/notes.models.ts";
 
 const notesRouter = Router();
 
 notesRouter.get(
     '/',
-    notesController.get
+    notesController.getAll
+);
+
+notesRouter.get(
+    '/:id/',
+    validate(noteSchemaObj.getById),
+    notesController.getById
 );
 
 notesRouter.post(
     '/',
-    validate(createNoteSchema),
+    validate(noteSchemaObj.create),
     notesController.create
 );
+
 
 notesRouter.all('/', notesController.notAllowed);
 

@@ -24,6 +24,11 @@ export const appErrorsByCode = {
         status: 500,
         detail: 'Внутренняя ошибка сервера',
     },
+    ENTITY_NOT_FOUND: {
+        title: 'Entity not found',
+        status: 404,
+        detail: 'Сущность не найдена',
+    },
 } satisfies Record<string, { title: string, status: number, detail: string }>
 
 export type AppErrorCode = keyof typeof appErrorsByCode
