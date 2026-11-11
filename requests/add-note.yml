@@ -1,13 +1,14 @@
 info:
   name: add note
   type: http
+  seq: 1
 
 http:
   method: POST
   url: "{{baseURL}}/notes"
   body:
     type: json
-    data: "{text: '123'}"
+    data: '{"text":"123"}'
   auth: inherit
 
 settings:
