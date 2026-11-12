@@ -1,22 +1,22 @@
-import z from "zod";
+import z from 'zod'
 
 const noteCommonSchema = z.object({
-    text: z.string().trim().min(1, 'Текст заметки обязателен'),
-    id: z.uuid()
+	text: z.string().trim().min(1, 'Текст заметки обязателен'),
+	id: z.uuid(),
 })
 
 export const noteSchemaObj = {
-    db: noteCommonSchema,
-    create: {
-        body: noteCommonSchema.pick({
-            text: true
-        })
-    },
-    getById: {
-        params: noteCommonSchema.pick({
-            id: true
-        })
-    }
+	db: noteCommonSchema,
+	create: {
+		body: noteCommonSchema.pick({
+			text: true,
+		}),
+	},
+	getById: {
+		params: noteCommonSchema.pick({
+			id: true,
+		}),
+	},
 }
 
 export type Note = z.infer<typeof noteSchemaObj.db>

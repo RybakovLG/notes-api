@@ -1,9 +1,10 @@
-import type { NextFunction } from "express";
-import type { Schemas, ValidatedRequest } from "./request.ts";
-import type { SafeResponse } from "./response.ts";
+import type { NextFunction } from 'express'
+import type { Schemas, ValidatedRequest } from './request.ts'
+import type { SafeResponse } from './response.ts'
 
+// biome-ignore lint/complexity/noBannedTypes: <explanation>
 export type Controller<S extends Schemas = {}> = (
-    req: ValidatedRequest<S>,
-    res: SafeResponse,
-    next: NextFunction,
+	req: ValidatedRequest<S>,
+	res: SafeResponse,
+	next: NextFunction,
 ) => void | Promise<void>
