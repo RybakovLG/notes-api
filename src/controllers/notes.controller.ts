@@ -1,6 +1,6 @@
 import { AppError } from '#errors/appError.ts'
 import type { Controller } from '#http/controller.ts'
-import { created, ok } from '#http/response.ts'
+import { created, noContent, ok } from '#http/response.ts'
 import type { noteSchemaObj } from '#models/notes.models.ts'
 import { noteRepo } from '#repositories/notes.repository.ts'
 
@@ -37,6 +37,16 @@ const updateNote: Controller<typeof noteSchemaObj.put> = async (req, res) => {
 	ok(res, newNote)
 }
 
+const deleteNote: Controller<typeof noteSchemaObj.delete> = async (req, res) => {
+	const isDeleted = await noteRepo.delete(req.params.id)
+
+	if (isDeleted) {
+		noContent(res)
+	} else {
+		throw new AppError('ENTITY_NOT_FOUND')
+	}
+}
+
 const notesNotAllowed: Controller = (_, res) => {
 	res.set('Allow', 'GET, POST')
 	throw new AppError('METHOD_NOT_ALLOWED')
@@ -48,4 +58,5 @@ export const notesController = {
 	getById: getNotesById,
 	update: updateNote,
 	notAllowed: notesNotAllowed,
+	delete: deleteNote,
 }

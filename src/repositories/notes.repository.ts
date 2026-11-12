@@ -60,9 +60,24 @@ async function updateNote(note: Note): Promise<Note | null> {
 	return foundNote
 }
 
+async function deleteNote(id: Note['id']): Promise<boolean> {
+	const notes = await readNotes()
+	const foundIndex = notes.findIndex((_note) => _note.id === id)
+
+	if (foundIndex === -1) {
+		return false
+	}
+
+	notes.splice(foundIndex, 1)
+	await writeNotes(notes)
+
+	return true
+}
+
 export const noteRepo = {
 	write: async (note: NoteBodyCreate) => safeTask(() => addNote(note.text)),
 	read: async () => safeTask(() => readNotes()),
 	findById: async (id: Note['id']) => safeTask(() => findNoteById(id)),
 	update: async (note: Note) => safeTask(() => updateNote(note)),
+	delete: async (id: Note['id']) => safeTask(() => deleteNote(id)),
 }

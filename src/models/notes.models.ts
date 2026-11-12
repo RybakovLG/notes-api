@@ -27,6 +27,11 @@ export const noteSchemaObj = {
 			text: true,
 		}),
 	},
+	delete: {
+		params: noteCommonSchema.pick({
+			id: true,
+		}),
+	},
 }
 
 export type Note = z.infer<typeof noteSchemaObj.db>

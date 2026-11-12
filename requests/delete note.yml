@@ -1,0 +1,18 @@
+info:
+  name: delete note
+  type: http
+
+http:
+  method: DELETE
+  url: "{{baseURL}}/notes/:id/"
+  params:
+    - name: id
+      value: f6cb9e11-4825-441b-9e66-8dd1026d992f
+      type: path
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
