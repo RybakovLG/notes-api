@@ -13,6 +13,7 @@ const getAllNotes: Controller = async (_, res) => {
 	const notes = await noteRepo.read()
 	ok(res, notes)
 }
+
 const getNotesById: Controller<typeof noteSchemaObj.getById> = async (req, res) => {
 	const foundNote = await noteRepo.findById(req.params.id)
 
@@ -21,6 +22,19 @@ const getNotesById: Controller<typeof noteSchemaObj.getById> = async (req, res) 
 	}
 
 	ok(res, foundNote)
+}
+
+const updateNote: Controller<typeof noteSchemaObj.put> = async (req, res) => {
+	const newNote = await noteRepo.update({
+		id: req.params.id,
+		text: req.body.text,
+	})
+
+	if (!newNote) {
+		throw new AppError('ENTITY_NOT_FOUND')
+	}
+
+	ok(res, newNote)
 }
 
 const notesNotAllowed: Controller = (_, res) => {
@@ -32,5 +46,6 @@ export const notesController = {
 	create: createNote,
 	getAll: getAllNotes,
 	getById: getNotesById,
+	update: updateNote,
 	notAllowed: notesNotAllowed,
 }

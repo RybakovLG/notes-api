@@ -1,7 +1,9 @@
 import z from 'zod'
 
 const noteCommonSchema = z.object({
-	text: z.string().trim().min(1, 'Текст заметки обязателен'),
+	text: z.string().refine((val) => val.trim().length > 0, {
+		error: 'Текст заметки должен содержать символы',
+	}),
 	id: z.uuid(),
 })
 
@@ -15,6 +17,14 @@ export const noteSchemaObj = {
 	getById: {
 		params: noteCommonSchema.pick({
 			id: true,
+		}),
+	},
+	put: {
+		params: noteCommonSchema.pick({
+			id: true,
+		}),
+		body: noteCommonSchema.pick({
+			text: true,
 		}),
 	},
 }

@@ -9,6 +9,8 @@ notesRouter.get('/', notesController.getAll)
 
 notesRouter.get('/:id/', validate(noteSchemaObj.getById), notesController.getById)
 
+notesRouter.put('/:id/', validate(noteSchemaObj.put), notesController.update)
+
 notesRouter.post('/', validate(noteSchemaObj.create), notesController.create)
 
 notesRouter.all('/', notesController.notAllowed)
