@@ -13,8 +13,13 @@ async function safeTask<T>(task: () => Promise<T>): Promise<T> {
 
 const NOTES_ENCODING = 'utf-8'
 
+// Атомарная запись: пишем во временный файл и переименовываем поверх основного.
+// На месте notes.json всегда целый файл — старый или новый, недописанного не бывает.
 async function writeNotes(notes: Note[]) {
-	return await fs.writeFile(env.NOTES_PATH, JSON.stringify(notes), NOTES_ENCODING)
+	const tmpPath = `${env.NOTES_PATH}.tmp`
+
+	await fs.writeFile(tmpPath, JSON.stringify(notes), NOTES_ENCODING)
+	await fs.rename(tmpPath, env.NOTES_PATH)
 }
 
 async function readNotes(): Promise<Note[]> {
