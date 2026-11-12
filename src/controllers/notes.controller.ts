@@ -47,10 +47,13 @@ const deleteNote: Controller<typeof noteSchemaObj.delete> = async (req, res) => 
 	}
 }
 
-const notesNotAllowed: Controller = (_, res) => {
-	res.set('Allow', 'GET, POST')
-	throw new AppError('METHOD_NOT_ALLOWED')
-}
+// Фабрика: для каждого пути свой список разрешённых методов в заголовке Allow
+const notesNotAllowed =
+	(methods: string[]): Controller =>
+	(_, res) => {
+		res.set('Allow', methods.join(', ').toUpperCase())
+		throw new AppError('METHOD_NOT_ALLOWED')
+	}
 
 export const notesController = {
 	create: createNote,
