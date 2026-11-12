@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import fs from 'node:fs/promises'
-import path from 'node:path'
 import type { Note, NoteBodyCreate } from '#models/notes.models.ts'
+import { env } from '../config.ts'
 
 let writeQueue: Promise<unknown> = Promise.resolve()
 
@@ -11,15 +11,15 @@ async function safeTask<T>(task: () => Promise<T>): Promise<T> {
 	return result
 }
 
-const PATH_NOTES = path.join(import.meta.dirname, '../notes.json')
 const NOTES_ENCODING = 'utf-8'
+
 async function writeNotes(notes: Note[]) {
-	return await fs.writeFile(PATH_NOTES, JSON.stringify(notes), NOTES_ENCODING)
+	return await fs.writeFile(env.NOTES_PATH, JSON.stringify(notes), NOTES_ENCODING)
 }
 
 async function readNotes(): Promise<Note[]> {
 	try {
-		const notesJson = await fs.readFile(PATH_NOTES, NOTES_ENCODING)
+		const notesJson = await fs.readFile(env.NOTES_PATH, NOTES_ENCODING)
 
 		return JSON.parse(notesJson)
 	} catch (e) {

@@ -1,5 +1,6 @@
 import { app } from './app.ts'
+import { env } from './config.ts'
 
-app.listen(3000, () => {
-	console.log('server on http://localhost:3000')
+app.listen(env.PORT, () => {
+	console.log(`server started on http://localhost:${env.PORT}`)
 })
