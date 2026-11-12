@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import fs from 'node:fs/promises'
 import path from 'node:path'
-import type { Note, NoteBodyCreate } from '../models/notes.models.ts'
+import type { Note, NoteBodyCreate } from '#models/notes.models.ts'
 
 const writeNote = async (note: NoteBodyCreate) => safeTask(() => addNote(note.text))
 

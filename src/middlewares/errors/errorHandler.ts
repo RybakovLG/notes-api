@@ -1,6 +1,6 @@
 import type { ErrorRequestHandler } from 'express'
-import { AppError } from '../../errors/appError.ts'
-import { type AppErrorCode, appErrorsByCode, problemType } from '../../errors/errorCodes.ts'
+import { AppError } from '#errors/appError.ts'
+import { type AppErrorCode, appErrorsByCode, problemType } from '#errors/errorCodes.ts'
 
 const bodyParserCodes: Record<string, AppErrorCode> = {
 	'entity.parse.failed': 'ENTITY_PARSE_FAILED',

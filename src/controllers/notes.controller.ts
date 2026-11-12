@@ -1,8 +1,8 @@
-import { AppError } from '../errors/appError.ts'
-import type { Controller } from '../http/controller.ts'
-import { created, ok } from '../http/response.ts'
-import type { noteSchemaObj } from '../models/notes.models.ts'
-import { noteRepo } from '../repositories/notes.repository.ts'
+import { AppError } from '#errors/appError.ts'
+import type { Controller } from '#http/controller.ts'
+import { created, ok } from '#http/response.ts'
+import type { noteSchemaObj } from '#models/notes.models.ts'
+import { noteRepo } from '#repositories/notes.repository.ts'
 
 const createNote: Controller<typeof noteSchemaObj.create> = async ({ body }, res) => {
 	const newNote = await noteRepo.write(body)

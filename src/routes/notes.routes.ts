@@ -1,7 +1,7 @@
 import { Router } from 'express'
-import { notesController } from '../controllers/notes.controller.ts'
-import { validate } from '../middlewares/validation/validate.ts'
-import { noteSchemaObj } from '../models/notes.models.ts'
+import { notesController } from '#controllers/notes.controller.ts'
+import { validate } from '#middlewares/validation/validate.ts'
+import { noteSchemaObj } from '#models/notes.models.ts'
 
 const notesRouter = Router()
 

@@ -1,7 +1,7 @@
 import type { NextFunction, Response } from 'express'
 import type { ZodError } from 'zod'
-import { AppError, type ErrorDetails } from '../../errors/appError.ts'
-import type { Schemas, ValidatedRequest } from '../../http/request.ts'
+import { AppError, type ErrorDetails } from '#errors/appError.ts'
+import type { Schemas, ValidatedRequest } from '#http/request.ts'
 
 // Собираем ошибки из всех частей запроса и отдаём одним 400.
 // В req.body кладём данные после схемы (с trim и прочими преобразованиями)

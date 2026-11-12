@@ -26,5 +26,15 @@
 	"dependencies": {
 		"express": "^5.3.0",
 		"zod": "^4.6.7"
+	},
+	"imports": {
+		"#controllers/*": "./src/controllers/*",
+		"#services/*": "./src/services/*",
+		"#errors/*": "./src/errors/*",
+		"#http/*": "./src/http/*",
+		"#middlewares/*": "./src/middlewares/*",
+		"#models/*": "./src/models/*",
+		"#repositories/*": "./src/repositories/*",
+		"#routes/*": "./src/routes/*"
 	}
 }
