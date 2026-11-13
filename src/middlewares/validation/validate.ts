@@ -4,7 +4,7 @@ import { AppError, type ErrorDetails } from '#errors/appError.ts'
 import type { Schemas, ValidatedRequest } from '#http/request.ts'
 
 // Собираем ошибки из всех частей запроса и отдаём одним 400.
-// В req.body кладём данные после схемы (с trim и прочими преобразованиями)
+// В req.body кладём данные после схемы (если в ней есть transform — уже преобразованные)
 export const validate =
 	<S extends Schemas>(schemas: S) =>
 	(req: ValidatedRequest<S>, _: Response, next: NextFunction) => {

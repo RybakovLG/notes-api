@@ -1,10 +1,20 @@
 import type { ErrorRequestHandler } from 'express'
-import { AppError } from '#errors/appError.ts'
+import { AppError, type ErrorDetails } from '#errors/appError.ts'
 import { type AppErrorCode, appErrorsByCode, problemType } from '#errors/errorCodes.ts'
 
 const bodyParserCodes: Record<string, AppErrorCode> = {
 	'entity.parse.failed': 'ENTITY_PARSE_FAILED',
 	'entity.too.large': 'ENTITY_TOO_LARGE',
+}
+
+export type AppErrorRes = {
+	type: string
+	title: string
+	status: number
+	detail: string
+	instance: string
+	code: AppErrorCode
+	errors: ErrorDetails | null
 }
 
 function toAppError(err: unknown): AppError {
@@ -37,5 +47,5 @@ export const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
 			instance: req.originalUrl,
 			code: appError.code,
 			errors: appError.errors,
-		})
+		} satisfies AppErrorRes)
 }

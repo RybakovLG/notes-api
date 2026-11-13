@@ -51,7 +51,7 @@ const deleteNote: Controller<typeof noteSchemaObj.delete> = async (req, res) => 
 const notesNotAllowed =
 	(methods: string[]): Controller =>
 	(_, res) => {
-		res.set('Allow', methods.join(', ').toUpperCase())
+		res.set('Allow', methods.toSorted().join(', ').toUpperCase())
 		throw new AppError('METHOD_NOT_ALLOWED')
 	}
 
