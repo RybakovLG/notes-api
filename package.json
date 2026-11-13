@@ -7,11 +7,12 @@
 		"dev": "node --env-file-if-exists=.env --watch src/server.ts",
 		"start": "node --env-file-if-exists=.env src/server.ts",
 		"typecheck": "tsc",
-		"test": "echo \"Error: no test specified\" && exit 1",
+		"test": "vitest run",
 		"lint": "biome lint",
 		"format": "biome format --write",
 		"check": "biome check",
-		"fix": "biome check --write"
+		"fix": "biome check --write",
+		"test:watch": "vitest"
 	},
 	"keywords": [],
 	"author": "",
@@ -21,7 +22,10 @@
 		"@biomejs/biome": "2.6.7",
 		"@types/express": "^5.0.6",
 		"@types/node": "^26.6.6",
-		"typescript": "^7.0.2"
+		"@types/supertest": "^7.2.1",
+		"supertest": "^7.3.2",
+		"typescript": "^7.0.2",
+		"vitest": "^5.1.0"
 	},
 	"dependencies": {
 		"express": "^5.3.0",
