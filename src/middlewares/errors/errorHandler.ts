@@ -7,7 +7,7 @@ const bodyParserCodes: Record<string, AppErrorCode> = {
 	'entity.too.large': 'ENTITY_TOO_LARGE',
 }
 
-export type AppErrorRes = {
+export type ResAppError = {
 	type: string
 	title: string
 	status: number
@@ -47,5 +47,5 @@ export const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
 			instance: req.originalUrl,
 			code: appError.code,
 			errors: appError.errors,
-		} satisfies AppErrorRes)
+		} satisfies ResAppError)
 }
