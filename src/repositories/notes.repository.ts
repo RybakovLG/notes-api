@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto'
 import fs from 'node:fs/promises'
-import type { Note, NoteBodyCreate } from '#models/notes.models.ts'
+import type { Note, NoteBodyCreate, NoteGetAllQuery } from '#models/notes.models.ts'
 import { env } from '../config.ts'
 
 let writeQueue: Promise<unknown> = Promise.resolve()
@@ -22,10 +22,21 @@ async function writeNotes(notes: Note[]) {
 	await fs.rename(tmpPath, env.NOTES_PATH)
 }
 
-async function readNotes(): Promise<Note[]> {
+async function getPaginatedNotes(
+	query: NoteGetAllQuery,
+): Promise<{ total: number; notes: Note[] }> {
+	const notes = await readAllNotes()
+	const { limit, offset } = query
+
+	return {
+		notes: notes.slice(offset, offset + limit),
+		total: notes.length,
+	}
+}
+
+async function readAllNotes(): Promise<Note[]> {
 	try {
 		const notesJson = await fs.readFile(env.NOTES_PATH, NOTES_ENCODING)
-
 		return JSON.parse(notesJson)
 	} catch (e) {
 		if (isFileNotFound(e)) return []
@@ -38,7 +49,7 @@ function isFileNotFound(e: unknown) {
 }
 
 async function addNote(text: NoteBodyCreate['text']) {
-	const notes = await readNotes()
+	const notes = await readAllNotes()
 	const newNote: Note = { text, id: randomUUID() }
 	notes.push(newNote)
 
@@ -47,12 +58,12 @@ async function addNote(text: NoteBodyCreate['text']) {
 }
 
 async function findNoteById(id: Note['id']) {
-	const notes = await readNotes()
+	const notes = await readAllNotes()
 	return notes.find((note) => note.id === id) ?? null
 }
 
 async function updateNote(note: Note): Promise<Note | null> {
-	const notes = await readNotes()
+	const notes = await readAllNotes()
 	const foundNote = notes.find((_note) => _note.id === note.id)
 
 	if (!foundNote) {
@@ -66,7 +77,7 @@ async function updateNote(note: Note): Promise<Note | null> {
 }
 
 async function deleteNote(id: Note['id']): Promise<boolean> {
-	const notes = await readNotes()
+	const notes = await readAllNotes()
 	const foundIndex = notes.findIndex((_note) => _note.id === id)
 
 	if (foundIndex === -1) {
@@ -81,7 +92,8 @@ async function deleteNote(id: Note['id']): Promise<boolean> {
 
 export const noteRepo = {
 	write: async (note: NoteBodyCreate) => safeTask(() => addNote(note.text)),
-	read: async () => safeTask(() => readNotes()),
+	getPaginatedNotes: async (query: NoteGetAllQuery) => safeTask(() => getPaginatedNotes(query)),
+	readAll: async () => safeTask(() => readAllNotes()),
 	findById: async (id: Note['id']) => safeTask(() => findNoteById(id)),
 	update: async (note: Note) => safeTask(() => updateNote(note)),
 	delete: async (id: Note['id']) => safeTask(() => deleteNote(id)),

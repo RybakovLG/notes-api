@@ -1,16 +1,21 @@
 import { randomUUID } from 'node:crypto'
 import request, { type Response } from 'supertest'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import type { AppErrorWhere } from '#errors/appError.ts'
 import type { ResAppError } from '#middlewares/errors/errorHandler.ts'
-import type { Note } from '#models/notes.models.ts'
+import type { Note, NoteGetAllQuery } from '#models/notes.models.ts'
+import type { Paginated } from '#services/note.service.ts'
 import { app } from '../src/app.ts'
 import { clearNotes } from './setup.ts'
 
 // ── запросы ──────────────────────────────────────────────
 type Body = string | object | undefined
+type JsonResponse<T> = Omit<Response, 'body'> & { body: T }
 
 const req = () => request(app)
-const getNotes = () => req().get('/notes')
+const getNotes = async (
+	query: Partial<NoteGetAllQuery> = {},
+): Promise<JsonResponse<Paginated<Note[]>>> => req().get('/notes').query(query)
 const postNote = (body?: Body) => req().post('/notes').send(body)
 const getNote = (id: string) => req().get(`/notes/${id}`)
 const putNote = (id: string, body?: Body) => req().put(`/notes/${id}`).send(body)
@@ -27,8 +32,6 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 const anyText = expect.stringMatching(/\S/)
 const anyId = expect.stringMatching(UUID)
 
-type ErrorIn = 'body' | 'params'
-
 function expectError(res: Response, status: number, error: Partial<ResAppError>) {
 	expect(res.status).toBe(status)
 	expect(res.body).toMatchObject<Partial<ResAppError>>(error)
@@ -37,7 +40,7 @@ function expectError(res: Response, status: number, error: Partial<ResAppError>)
 const expectNotFound = (res: Response) => expectError(res, 404, { code: 'ENTITY_NOT_FOUND' })
 
 // Ровно одна ошибка валидации в указанном поле
-const expectValidationError = (res: Response, where: ErrorIn, field: string) =>
+const expectValidationError = (res: Response, where: AppErrorWhere, field: string) =>
 	expectError(res, 400, {
 		code: 'VALIDATION_ERROR',
 		errors: [{ in: where, field, message: anyText }],
@@ -51,10 +54,11 @@ function expectNotAllowed(res: Response, allowed: string[]) {
 
 // Состояние хранилища: ровно эти заметки, порядок не важен
 async function expectStoredNotes(expected: Note[]) {
-	const { status, body } = await getNotes()
+	const { status, body } = await getNotes({ limit: 100, offset: 0 })
 	expect(status).toBe(200)
-	expect(body).toHaveLength(expected.length)
-	expect(body).toEqual(expect.arrayContaining(expected))
+	expect(body.total).toBe(expected.length)
+	expect(body.items).toHaveLength(expected.length)
+	expect(body.items).toEqual(expect.arrayContaining(expected))
 }
 
 // ── данные ───────────────────────────────────────────────
@@ -63,6 +67,26 @@ const VALID_TEXTS = ['Valid', '  valid  ', 'v', 'loooooong vaaaaliiiidddd ']
 const INVALID_TEXTS = ['', ' ', '   ', 123, undefined]
 const INVALID_BODIES = ['', [], undefined]
 const INVALID_ID = 'invalid-id'
+
+const NOTES_COUNT_FOR_PAGINATE = 100
+const VALID_QUERY_GET_ALL = [
+	[],
+	[5],
+	[5, 0],
+	[50, 0],
+	[100],
+	[5, 1],
+	[25, 3],
+	[undefined, 1],
+] satisfies [limit?: number, offset?: number][]
+const INVALID_QUERY_LIMIT_GET_ALL = [0, -1, -5, 1.5, 101, 'asd']
+const INVALID_QUERY_OFFSET_GET_ALL = [-1, -5, 1.5, 'asd']
+const SHORT_PAGE_QUERY_GET_ALL = [
+	[11, undefined, 10],
+	[11, 0, 10],
+	[5, 8, 2],
+] satisfies [limit: number, offset: number | undefined, expectedCount: number][]
+const OUT_OF_RANGE_OFFSETS = [10, 15]
 
 afterEach(clearNotes)
 
@@ -96,6 +120,78 @@ describe('GET /notes', () => {
 		const created = await Promise.all(VALID_TEXTS.map(seedNote))
 
 		await expectStoredNotes(created)
+	})
+
+	it('пропускает две заметки и возвращает третью и четвёртую', async () => {
+		await seedNote('first')
+		await seedNote('second')
+		const third = await seedNote('third')
+		const fourth = await seedNote('fourth')
+
+		const { status, body } = await getNotes({ limit: 2, offset: 2 })
+
+		expect(status).toBe(200)
+		expect(body).toEqual({ items: [third, fourth], total: 4 })
+	})
+
+	describe('проверка пагинации на валидных limit offset', () => {
+		beforeEach(async () => {
+			await Promise.all(
+				Array.from({ length: NOTES_COUNT_FOR_PAGINATE }, (_, i) => seedNote(`${i}-note`)),
+			)
+		})
+
+		it.for(VALID_QUERY_GET_ALL)(
+			'возвращает страницу для параметров %j',
+			async ([limit, offset]) => {
+				const { status, body } = await getNotes({ limit, offset })
+				expect(status).toBe(200)
+				expect(body.total).toBe(NOTES_COUNT_FOR_PAGINATE)
+				expect(body.items).toHaveLength(limit ?? 10)
+			},
+		)
+	})
+
+	describe('проверка пагинации на невалидных limit offset', () => {
+		it.for(INVALID_QUERY_LIMIT_GET_ALL)('400 на невалидный limit %j', async (limit) => {
+			const res = await req().get('/notes').query({ limit })
+			expectValidationError(res, 'query', 'limit')
+		})
+
+		it.for(INVALID_QUERY_OFFSET_GET_ALL)('400 на невалидный offset %j', async (offset) => {
+			const res = await req().get('/notes').query({ limit: 5, offset })
+			expectValidationError(res, 'query', 'offset')
+		})
+	})
+
+	it('возвращает пустую первую страницу и 404 на следующую без заметок', async () => {
+		const { status, body } = await getNotes()
+		expect(status).toBe(200)
+		expect(body).toEqual({ items: [], total: 0 })
+
+		const res = await req().get('/notes').query({ offset: 1 })
+		expectNotFound(res)
+	})
+
+	describe('проверка границ пагинации', () => {
+		beforeEach(async () => {
+			await Promise.all(Array.from({ length: 10 }, (_, i) => seedNote(`${i}-note`)))
+		})
+
+		it.for(SHORT_PAGE_QUERY_GET_ALL)(
+			'возвращает страницу для параметров %j',
+			async ([limit, offset, expectedCount]) => {
+				const { status, body } = await getNotes({ limit, offset })
+				expect(status).toBe(200)
+				expect(body.total).toBe(10)
+				expect(body.items).toHaveLength(expectedCount)
+			},
+		)
+
+		it.for(OUT_OF_RANGE_OFFSETS)('404 при смещении %i за пределами списка', async (offset) => {
+			const res = await req().get('/notes').query({ limit: 5, offset })
+			expectNotFound(res)
+		})
 	})
 })
 
@@ -208,7 +304,11 @@ describe('конкурентность запросов', () => {
 		for (const res of responses) expect(res.status).toBe(201)
 
 		// Ожидание — то, что отправили, а не то, что вернул сервер
-		const { body: notes } = await getNotes()
-		expect(notes.map((n: Note) => n.text).toSorted()).toEqual(texts.toSorted())
+		const {
+			status,
+			body: { items },
+		} = await getNotes({ limit: 100, offset: 0 })
+		expect(status).toBe(200)
+		expect(items.map((note) => note.text).toSorted()).toEqual(texts.toSorted())
 	})
 })

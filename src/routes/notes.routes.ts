@@ -7,14 +7,14 @@ const notesRouter = Router()
 
 notesRouter
 	.route('/')
-	.get(notesController.getAll)
-	.post(validate(noteSchemaObj.create), notesController.create)
+	.get(validate(noteSchemaObj.getAll, notesController.getAll))
+	.post(validate(noteSchemaObj.create, notesController.create))
 
 notesRouter
 	.route('/:id')
-	.get(validate(noteSchemaObj.getById), notesController.getById)
-	.put(validate(noteSchemaObj.put), notesController.update)
-	.delete(validate(noteSchemaObj.delete), notesController.delete)
+	.get(validate(noteSchemaObj.getById, notesController.getById))
+	.put(validate(noteSchemaObj.put, notesController.update))
+	.delete(validate(noteSchemaObj.delete, notesController.delete))
 
 // route.methods — внутреннее поле Express (в типах его нет): методы, уже зарегистрированные на путь.
 type RouteWithMethods = IRoute & { methods: Record<string, true> }

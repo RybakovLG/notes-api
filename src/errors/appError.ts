@@ -1,16 +1,18 @@
 import type { AppErrorCode } from './errorCodes.ts'
 
-export type ErrorDetails = {
+export type AppErrorDetails = {
 	in: 'query' | 'params' | 'body'
 	field: string
 	message: string
 }[]
 
+export type AppErrorWhere = AppErrorDetails[number]['in']
+
 export class AppError extends Error {
 	public readonly code: AppErrorCode
-	public readonly errors: ErrorDetails | null
+	public readonly errors: AppErrorDetails | null
 
-	constructor(code: AppErrorCode, errors: ErrorDetails | null = null) {
+	constructor(code: AppErrorCode, errors: AppErrorDetails | null = null) {
 		super(code)
 
 		this.name = 'AppError'

@@ -3,13 +3,10 @@ import type { ZodType, z } from 'zod'
 
 export type Schemas = Partial<Record<'params' | 'query' | 'body', ZodType>>
 
-// Есть схема -> тип из неё, нет схемы -> дефолт Express
-type InferOr<T, Default> = T extends ZodType ? z.infer<T> : Default
+export type ValidatedParts<S extends Schemas> = {
+	[K in keyof S as K extends keyof Schemas ? K : never]: z.output<NonNullable<S[K]>>
+}
 
-// Типы req из группы схем эндпоинта: одна группа и для validate, и для контроллера
-export type ValidatedRequest<S extends Schemas> = Request<
-	InferOr<S['params'], Request['params']>,
-	unknown,
-	InferOr<S['body'], unknown>,
-	InferOr<S['query'], Request['query']>
->
+export type ValidatedRequest<S extends Schemas> = Request & {
+	validated: ValidatedParts<S>
+}

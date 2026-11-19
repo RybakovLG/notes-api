@@ -1,5 +1,5 @@
 import type { ErrorRequestHandler } from 'express'
-import { AppError, type ErrorDetails } from '#errors/appError.ts'
+import { AppError, type AppErrorDetails } from '#errors/appError.ts'
 import { type AppErrorCode, appErrorsByCode, problemType } from '#errors/errorCodes.ts'
 
 const bodyParserCodes: Record<string, AppErrorCode> = {
@@ -14,7 +14,7 @@ export type ResAppError = {
 	detail: string
 	instance: string
 	code: AppErrorCode
-	errors: ErrorDetails | null
+	errors: AppErrorDetails | null
 }
 
 function toAppError(err: unknown): AppError {
