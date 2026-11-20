@@ -54,6 +54,11 @@ const deleteNote: Controller<typeof noteSchemaObj.delete> = async (req, res) => 
 	}
 }
 
+const getCount: RequestHandler = async (_, res) => {
+	const total = await noteRepo.readAllCount()
+	ok(res, { total })
+}
+
 // Фабрика: для каждого пути свой список разрешённых методов в заголовке Allow
 const notesNotAllowed =
 	(methods: string[]): RequestHandler =>
@@ -69,4 +74,5 @@ export const notesController = {
 	update: updateNote,
 	notAllowed: notesNotAllowed,
 	delete: deleteNote,
+	getNotesCount: getCount,
 }

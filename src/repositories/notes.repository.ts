@@ -90,10 +90,15 @@ async function deleteNote(id: Note['id']): Promise<boolean> {
 	return true
 }
 
+async function readAllCount(): Promise<number> {
+	return await readAllNotes().then((n) => n.length)
+}
+
 export const noteRepo = {
 	write: async (note: NoteBodyCreate) => safeTask(() => addNote(note.text)),
-	getPaginatedNotes: async (query: NoteGetAllQuery) => safeTask(() => getPaginatedNotes(query)),
+	readPaginated: async (query: NoteGetAllQuery) => safeTask(() => getPaginatedNotes(query)),
 	readAll: async () => safeTask(() => readAllNotes()),
+	readAllCount: async () => safeTask(() => readAllCount()),
 	findById: async (id: Note['id']) => safeTask(() => findNoteById(id)),
 	update: async (note: Note) => safeTask(() => updateNote(note)),
 	delete: async (id: Note['id']) => safeTask(() => deleteNote(id)),

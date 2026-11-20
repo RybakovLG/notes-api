@@ -10,6 +10,8 @@ notesRouter
 	.get(validate(noteSchemaObj.getAll, notesController.getAll))
 	.post(validate(noteSchemaObj.create, notesController.create))
 
+notesRouter.route('/count').get(notesController.getNotesCount)
+
 notesRouter
 	.route('/:id')
 	.get(validate(noteSchemaObj.getById, notesController.getById))

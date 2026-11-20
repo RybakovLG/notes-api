@@ -20,7 +20,7 @@ const getAll = async ({
 }: NoteGetAllQuery): Promise<Paginated<Note[]>> => {
 	// console.log('getAll', { limit, offset })
 
-	const { notes, total } = await noteRepo.getPaginatedNotes({ limit, offset })
+	const { notes, total } = await noteRepo.readPaginated({ limit, offset })
 	if (offset > 0 && offset >= total) {
 		throw new AppError('ENTITY_NOT_FOUND')
 	}

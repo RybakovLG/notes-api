@@ -20,6 +20,7 @@ const postNote = (body?: Body) => req().post('/notes').send(body)
 const getNote = (id: string) => req().get(`/notes/${id}`)
 const putNote = (id: string, body?: Body) => req().put(`/notes/${id}`).send(body)
 const deleteNote = (id: string) => req().delete(`/notes/${id}`)
+const getNotesCount = () => req().get(`/notes/count`)
 
 // Фикстура: создаёт заметку и возвращает её тело
 async function seedNote(text = 'note'): Promise<Note> {
@@ -310,5 +311,23 @@ describe('конкурентность запросов', () => {
 		} = await getNotes({ limit: 100, offset: 0 })
 		expect(status).toBe(200)
 		expect(items.map((note) => note.text).toSorted()).toEqual(texts.toSorted())
+	})
+})
+
+describe('количество заметок', () => {
+	const COUNTS = [0, 1, 25]
+
+	it.for(COUNTS)('на $0 созданных заметок count вернул $0', async (count) => {
+		const responses = await Promise.all(
+			Array.from({ length: count }, (_, i) => postNote({ text: `note-${i}` })),
+		)
+		for (const res of responses) expect(res.status).toBe(201)
+
+		const {
+			status,
+			body: { total },
+		} = await getNotesCount()
+		expect(status).toBe(200)
+		expect(total).toBe(count)
 	})
 })
